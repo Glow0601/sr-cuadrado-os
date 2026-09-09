@@ -923,7 +923,7 @@ td strong{
         <div class="stat-value" id="statLevel">1</div>
         <div class="stat-sub" id="statLevelName">Principiante</div>
       </div>
-
+<div id="weeklyChallenge"></div>
     </div>
 
 
@@ -1077,97 +1077,77 @@ td strong{
         </div>
       </div>
 
+<form id="workoutForm">
 
-      <form id="workoutForm">
+  <div class="form-grid">
 
-        <div class="form-grid">
+    <div class="form-group">
+      <label>Fecha</label>
+      <input type="date" id="date" required>
+    </div>
 
-          <div class="form-group">
-            <label>Fecha</label>
-            <input type="date" id="date" required>
-          </div>
+    <div class="form-group">
+      <label>Tipo de rutina</label>
+      <select id="type" required>
+        <option value="Rutina libre">🏋️ Rutina libre</option>
+        <option value="Rutina Cindy">🔥 Rutina Cindy</option>
+      </select>
+    </div>
 
-          <div class="form-group">
-            <label>Tipo de entrenamiento</label>
+  </div>
 
-            <select id="type">
-              <option>Full Body</option>
-              <option>Push</option>
-              <option>Pull</option>
-              <option>Legs</option>
-              <option>Core</option>
-              <option>Skill</option>
-              <option>Cardio</option>
-            </select>
+  <div id="routineExercises" style="margin-top:20px;">
+    <!-- Aquí aparecerán los ejercicios -->
+  </div>
 
-          </div>
+  <div class="form-grid" style="margin-top:20px;">
 
+    <div class="form-group">
+      <label>Duración (minutos) - opcional </label>
+      <input
+        type="number"
+        id="duration"
+        min="0"
+        placeholder="0 = sin tiempo"
+      >
+    </div>
 
-          <div class="form-group">
-            <label>Ejercicio principal</label>
-            <input id="exercise" placeholder="Ej. Pull Up" required>
-          </div>
+    <div class="form-group">
+      <label>Peso corporal (kg)</label>
+      <input
+        type="number"
+        id="bodyweight"
+        min="0"
+        step=".1"
+        placeholder="Opcional"
+      >
+    </div>
 
+    <div class="form-group full">
+      <label>Notas de la sesión</label>
 
-          <div class="form-group">
-            <label>Series</label>
-            <input type="number" id="sets" min="1" placeholder="4" required>
-          </div>
+      <textarea
+        id="notes"
+        placeholder="¿Cómo te sentiste? ¿Qué salió bien? ¿Qué necesitas mejorar?"
+      ></textarea>
 
+    </div>
 
-          <div class="form-group">
-            <label>Repeticiones totales</label>
-            <input type="number" id="reps" min="1" placeholder="20" required>
-          </div>
+  </div>
 
+  <div class="form-actions">
 
-          <div class="form-group">
-            <label>Peso añadido (kg)</label>
-            <input type="number" id="weight" min="0" step=".5" value="0">
-          </div>
+    <button
+      class="btn btn-primary"
+      type="submit"
+    >
+      Guardar entrenamiento
+    </button>
 
+  </div>
 
-          <div class="form-group">
-            <label>RIR</label>
-
-            <select id="rir">
-              <option value="0">0 — Fallo</option>
-              <option value="1">1 — Muy cerca</option>
-              <option value="2">2 — Intenso</option>
-              <option value="3">3 — Moderado</option>
-              <option value="4">4+</option>
-            </select>
-
-          </div>
-
-
-          <div class="form-group">
-            <label>Duración (minutos)</label>
-            <input type="number" id="duration" min="1" placeholder="60">
-          </div>
-
-
-          <div class="form-group">
-            <label>Peso corporal (kg)</label>
-            <input type="number" id="bodyweight" min="0" step=".1" placeholder="Opcional">
-          </div>
-
-
-          <div class="form-group full">
-            <label>Notas</label>
-            <textarea id="notes" placeholder="¿Cómo te sentiste? ¿Qué salió bien? ¿Qué necesitas mejorar?"></textarea>
-          </div>
-
-        </div>
-
-
-        <div class="form-actions">
-          <button class="btn btn-primary" type="submit">
-            Guardar entrenamiento
-          </button>
-        </div>
-
-      </form>
+</form>
+      
 
     </div>
 
@@ -1465,8 +1445,42 @@ td strong{
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+
+const SUPABASE_URL = "https://calhdlgzeslqdjrpzqra.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Paxi-pUlo0dBfSWsvSNkRA_KxYFKYO6";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+async function probarSupabase() {
+
+  const { data, error } = await supabaseClient
+    .from("athlete_profile")
+    .select("*")
+    .limit(1);
+
+  if (error) {
+
+    console.error("❌ Error Supabase:", error);
+
+    alert("❌ Supabase no conectado: " + error.message);
+
+    return;
+  }
+
+  console.log("✅ Supabase conectado:", data);
+
+  alert("✅ Supabase conectado correctamente");
+
+}
+
+probarSupabase();
 
 /* =========================================================
    SR. CUADRADO OS 3.0
@@ -1485,8 +1499,41 @@ let goals = JSON.parse(localStorage.getItem(GOAL_KEY) || "[]");
    UTILIDADES
 ========================================================= */
 
-function saveWorkouts(){
+async function saveWorkouts(){
+
+  // Guardar localmente como respaldo
   localStorage.setItem(WORKOUT_KEY, JSON.stringify(workouts));
+
+  // Guardar también en Supabase
+  const workout = workouts[workouts.length - 1];
+
+  if (!workout) return;
+
+  const { data, error } = await supabaseClient
+    .from("workouts")
+    .insert({
+      workout_date: workout.date,
+      workout_type: workout.type,
+      main_exercise: workout.exercise,
+      sets: workout.sets,
+      reps: workout.reps,
+      added_weight: workout.weight,
+      rir: workout.rir,
+      duration: workout.duration,
+      bodyweight: workout.bodyweight,
+      notes: workout.notes
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("❌ Error guardando entrenamiento:", error);
+    alert("⚠️ Se guardó en el dispositivo, pero no en la nube.");
+    return;
+  }
+
+  console.log("☁️ Entrenamiento guardado en Supabase:", data);
+
 }
 
 function saveGoals(){
@@ -2432,7 +2479,959 @@ function renderAchievements(){
 /* =========================================================
    PROGRESIONES
 ========================================================= */
+// ==========================================
+// SR. CUADRADO — CATÁLOGO DE EJERCICIOS
+// ==========================================
 
+const exerciseCatalog = [
+  "Dominadas",
+  "Dominada Supina",
+  "Fondos",
+  "Muscle Up",
+  "Remo en barra",
+  "Elevación de rodillas",
+  "Elevación de piernas a la barra",
+  "Escaleras",
+  "Chimuela",
+  "Tubos",
+  "Crunches en V-Sit",
+  "Crunches cruzados",
+  "Burpees",
+  "Lagartijas",
+  "Sentadillas"
+];
+
+const cindyExercises = [
+  "Dominadas",
+  "Lagartijas",
+  "Sentadillas"
+];
+
+
+// ==========================================
+// EJERCICIOS PERSONALIZADOS
+// ==========================================
+
+let customExercises = JSON.parse(
+  localStorage.getItem("srCuadradoCustomExercises") || "[]"
+);
+
+
+// ==========================================
+// RENDERIZAR EJERCICIOS
+// ==========================================
+
+function renderRoutineExercises(){
+
+  const container = document.getElementById("routineExercises");
+  const type = document.getElementById("type").value;
+
+  if(!container) return;
+
+  // -----------------------------
+  // RUTINA CINDY
+  // -----------------------------
+
+  if(type === "Rutina Cindy"){
+
+    container.innerHTML = `
+      <div class="card">
+        <h3>🔥 Rutina Cindy</h3>
+
+        <p class="muted">
+          Registra el rendimiento de cada ejercicio realizado.
+        </p>
+
+        <div id="exerciseList">
+          ${cindyExercises.map((exercise,index) =>
+            createExerciseCard(exercise,index)
+          ).join("")}
+        </div>
+      </div>
+    `;
+
+    return;
+  }
+
+
+  // -----------------------------
+  // RUTINA LIBRE
+  // -----------------------------
+
+  const allExercises = [
+    ...exerciseCatalog,
+    ...customExercises
+  ];
+
+  container.innerHTML = `
+    <div class="card">
+
+      <h3>🏋️ Rutina libre</h3>
+
+      <p class="muted">
+        Selecciona los ejercicios que realizaste.
+      </p>
+
+      <div
+        id="exerciseCatalog"
+        style="
+          display:grid;
+          grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+          gap:10px;
+          margin-top:15px;
+        "
+      >
+
+        ${allExercises.map(exercise => `
+          <button
+            type="button"
+            class="btn"
+            onclick="addExerciseToRoutine('${escapeHtml(exercise)}')"
+          >
+            ＋ ${escapeHtml(exercise)}
+          </button>
+        `).join("")}
+
+      </div>
+
+      <div style="margin-top:15px;">
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          onclick="addCustomExercise()"
+        >
+          ＋ Agregar ejercicio personalizado
+        </button>
+
+      </div>
+
+      <div
+        id="selectedExercises"
+        style="margin-top:20px;"
+      >
+        <p class="muted">
+          Todavía no has seleccionado ejercicios.
+        </p>
+      </div>
+
+    </div>
+  `;
+}
+
+
+// ==========================================
+// ESCAPAR TEXTO
+// ==========================================
+
+function escapeHtml(text){
+
+  return String(text)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+
+}
+
+
+// ==========================================
+// EJERCICIOS SELECCIONADOS
+// ==========================================
+
+let selectedExercises = [];
+
+function addExerciseToRoutine(exercise){
+
+  if(selectedExercises.includes(exercise)){
+
+    showToast("Ese ejercicio ya está agregado.");
+
+    return;
+  }
+
+  selectedExercises.push(exercise);
+
+  renderSelectedExercises();
+}
+
+
+// ==========================================
+// RENDER SELECCIONADOS
+// ==========================================
+
+function renderSelectedExercises(){
+
+  const container =
+    document.getElementById("selectedExercises");
+
+  if(!container) return;
+
+  if(selectedExercises.length === 0){
+
+    container.innerHTML = `
+      <p class="muted">
+        Todavía no has seleccionado ejercicios.
+      </p>
+    `;
+
+    return;
+  }
+
+  container.innerHTML = selectedExercises
+    .map((exercise,index) =>
+      createExerciseCard(exercise,index,true)
+    )
+    .join("");
+}
+
+
+// ==========================================
+// TARJETA DE EJERCICIO
+// ==========================================
+
+function createExerciseCard(
+  exercise,
+  index,
+  removable = false
+){
+
+  return `
+    <div
+      class="card"
+      data-exercise="${escapeHtml(exercise)}"
+      style="margin-top:12px;"
+    >
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+        "
+      >
+
+        <h3 style="margin:0;">
+          ${escapeHtml(exercise)}
+        </h3>
+
+        ${
+          removable
+          ? `
+            <button
+              type="button"
+              class="btn"
+              onclick="removeExercise(${index})"
+            >
+              ✕
+            </button>
+          `
+          : ""
+        }
+
+      </div>
+
+      <div
+        class="form-grid"
+        style="margin-top:15px;"
+      >
+
+        <div class="form-group">
+
+          <label>Series</label>
+
+          <input
+            type="number"
+            class="exercise-sets"
+            min="1"
+            value="1"
+            placeholder="4"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>Repeticiones</label>
+
+          <input
+            type="number"
+            class="exercise-reps"
+            min="1"
+            value="1"
+            placeholder="10"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>Peso añadido (kg)</label>
+
+          <input
+            type="number"
+            class="exercise-weight"
+            min="0"
+            step=".5"
+            value="0"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label>RIR</label>
+
+          <select class="exercise-rir">
+
+            <option value="0">0 — Fallo</option>
+            <option value="1">1 — Muy cerca</option>
+            <option value="2">2 — Intenso</option>
+            <option value="3">3 — Moderado</option>
+            <option value="4">4+</option>
+
+          </select>
+
+        </div>
+
+      </div>
+
+    </div>
+  `;
+}
+
+
+// ==========================================
+// ELIMINAR EJERCICIO
+// ==========================================
+
+function removeExercise(index){
+
+  selectedExercises.splice(index,1);
+
+  renderSelectedExercises();
+
+}
+
+
+// ==========================================
+// AGREGAR EJERCICIO PERSONALIZADO
+// ==========================================
+
+function addCustomExercise(){
+
+  const exercise = prompt(
+    "¿Qué ejercicio realizaste?"
+  );
+
+  if(!exercise) return;
+
+  const cleanName = exercise.trim();
+
+  if(!cleanName) return;
+
+  if(
+    exerciseCatalog.includes(cleanName) ||
+    customExercises.includes(cleanName)
+  ){
+
+    addExerciseToRoutine(cleanName);
+
+    return;
+  }
+
+
+  const saveToCatalog = confirm(
+    `¿Quieres guardar "${cleanName}" en tu catálogo para usarlo en futuros entrenamientos?`
+  );
+
+
+  if(saveToCatalog){
+
+    customExercises.push(cleanName);
+
+    localStorage.setItem(
+      "srCuadradoCustomExercises",
+      JSON.stringify(customExercises)
+    );
+
+  }
+
+
+  addExerciseToRoutine(cleanName);
+
+  showToast(
+    saveToCatalog
+      ? "Ejercicio guardado en tu catálogo."
+      : "Ejercicio agregado solo a esta sesión."
+  );
+
+} // ==========================================
+// CAMBIO DE TIPO DE RUTINA
+// ==========================================
+
+document.getElementById("type").addEventListener("change", function(){
+
+  selectedExercises = [];
+
+  renderRoutineExercises();
+
+});
+
+
+// Mostrar ejercicios al abrir Registro
+
+renderRoutineExercises();
+/* =========================================================
+   MOTOR DE RETOS ADAPTATIVOS
+========================================================= */
+
+const CHALLENGE_KEY = "srCuadradoChallenges";
+
+let challenges = JSON.parse(
+  localStorage.getItem(CHALLENGE_KEY) || "{}"
+);
+
+
+/* ---------------------------------------------------------
+   Guardar retos
+--------------------------------------------------------- */
+
+function saveChallenges(){
+
+  localStorage.setItem(
+    CHALLENGE_KEY,
+    JSON.stringify(challenges)
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   Obtener entrenamientos de un ejercicio
+--------------------------------------------------------- */
+
+function getExerciseWorkouts(exercise){
+
+  return workouts
+    .filter(w =>
+      String(w.exercise || "").toLowerCase() ===
+      String(exercise || "").toLowerCase()
+    )
+    .sort((a,b) =>
+      new Date(a.date) - new Date(b.date)
+    );
+
+}
+
+
+/* ---------------------------------------------------------
+   Mejor marca del ejercicio
+--------------------------------------------------------- */
+
+function getExercisePR(exercise){
+
+  const records =
+    getExerciseWorkouts(exercise);
+
+  if(!records.length) return 0;
+
+  return Math.max(
+    ...records.map(w => Number(w.reps || 0))
+  );
+
+}
+
+
+/* ---------------------------------------------------------
+   Analizar tendencia
+--------------------------------------------------------- */
+
+function getExerciseTrend(exercise){
+
+  const records =
+    getExerciseWorkouts(exercise);
+
+  if(records.length < 2){
+
+    return "nuevo";
+
+  }
+
+  const recent =
+    records.slice(-3);
+
+  const values =
+    recent.map(w => Number(w.reps || 0));
+
+  if(values.length >= 3){
+
+    const last = values[values.length - 1];
+    const previous = values[values.length - 2];
+    const before = values[values.length - 3];
+
+    if(last > previous && previous >= before){
+      return "subiendo";
+    }
+
+    if(last < previous && previous < before){
+      return "bajando";
+    }
+
+  }
+
+  return "estable";
+
+}
+
+
+/* ---------------------------------------------------------
+   Crear / actualizar reto
+--------------------------------------------------------- */
+
+function generateChallenge(exercise){
+
+  const pr =
+    getExercisePR(exercise);
+
+  if(!pr) return null;
+
+  const trend =
+    getExerciseTrend(exercise);
+
+  const previous =
+    challenges[exercise];
+
+  let target;
+
+
+  /*
+     Si ya existe un reto activo,
+     respetamos su objetivo.
+  */
+
+  if(previous && previous.target){
+
+    target = previous.target;
+
+  }else{
+
+    target = pr + 1;
+
+  }
+
+
+  /*
+     Progreso constante
+     → aumentar reto
+  */
+
+  if(
+    previous &&
+    previous.completed === true
+  ){
+
+    if(trend === "subiendo"){
+
+      target = pr + 1;
+
+    }else{
+
+      target = pr + 1;
+
+    }
+
+  }
+
+
+  /*
+     Caída de rendimiento
+     → reto de recuperación
+  */
+
+  if(trend === "bajando"){
+
+    target = Math.max(
+      1,
+      pr
+    );
+
+  }
+
+
+  /*
+     Nunca permitir objetivo menor
+     que la mejor marca actual,
+     salvo que sea recuperación.
+  */
+
+  if(
+    trend !== "bajando" &&
+    target <= pr
+  ){
+
+    target = pr + 1;
+
+  }
+
+
+  challenges[exercise] = {
+
+    exercise,
+
+    target,
+
+    previousPR: pr,
+
+    completed: false,
+
+    trend,
+
+    updatedAt: new Date().toISOString()
+
+  };
+
+  saveChallenges();
+
+  return challenges[exercise];
+
+}
+
+
+/* ---------------------------------------------------------
+   Obtener reto actual
+--------------------------------------------------------- */
+
+function getCurrentChallenge(exercise){
+
+  let challenge =
+    challenges[exercise];
+
+  const pr =
+    getExercisePR(exercise);
+
+
+  if(!pr){
+
+    return null;
+
+  }
+
+
+  /*
+     Si no existe reto,
+     crear uno.
+  */
+
+  if(!challenge){
+
+    return generateChallenge(exercise);
+
+  }
+
+
+  /*
+     Si el usuario consiguió un PR
+     superior al registrado en el reto,
+     actualizar el reto.
+  */
+
+  if(
+    pr > Number(challenge.previousPR || 0)
+    &&
+    challenge.completed === true
+  ){
+
+    return generateChallenge(exercise);
+
+  }
+
+
+  return challenge;
+
+}
+
+
+/* ---------------------------------------------------------
+   Registrar resultado del reto
+--------------------------------------------------------- */
+
+function checkChallenge(exercise, reps){
+
+  const challenge =
+    getCurrentChallenge(exercise);
+
+  if(!challenge) return;
+
+
+  const performed =
+    Number(reps || 0);
+
+
+  if(performed >= challenge.target){
+
+    challenge.completed = true;
+
+    challenge.completedAt =
+      new Date().toISOString();
+
+    challenge.previousPR =
+      Math.max(
+        challenge.previousPR || 0,
+        performed
+      );
+
+
+    saveChallenges();
+
+
+    /*
+       Crear inmediatamente
+       el siguiente reto.
+    */
+
+    setTimeout(() => {
+
+      generateChallenge(exercise);
+
+      renderAll();
+
+    },100);
+
+
+    showToast(
+      `🏆 RETO SUPERADO — ${exercise}: ${performed} reps`
+    );
+
+  }
+
+}
+
+
+/* ---------------------------------------------------------
+   Obtener ejercicio candidato para reto
+--------------------------------------------------------- */
+
+function getBestChallengeExercise(){
+
+  if(!workouts.length){
+
+    return null;
+
+  }
+
+
+  /*
+     Agrupar ejercicios realizados
+  */
+
+  const exerciseNames =
+    [...new Set(
+      workouts.map(w => w.exercise)
+    )];
+
+
+  /*
+     Priorizar ejercicios
+     con más registros.
+  */
+
+  const ranked =
+    exerciseNames
+      .map(exercise => {
+
+        const count =
+          getExerciseWorkouts(exercise).length;
+
+        const pr =
+          getExercisePR(exercise);
+
+        return {
+          exercise,
+          count,
+          pr
+        };
+
+      })
+      .sort((a,b) => {
+
+        if(b.count !== a.count){
+
+          return b.count - a.count;
+
+        }
+
+        return b.pr - a.pr;
+
+      });
+
+
+  return ranked[0]?.exercise || null;
+
+}
+
+
+/* ---------------------------------------------------------
+   Render del reto en Dashboard
+--------------------------------------------------------- */
+
+function renderWeeklyChallenge(){
+
+  const container =
+    document.getElementById(
+      "weeklyChallenge"
+    );
+
+  if(!container) return;
+
+
+  const exercise =
+    getBestChallengeExercise();
+
+
+  if(!exercise){
+
+    container.innerHTML = `
+      <div class="card">
+        <div class="card-title">
+          🎯 Reto de la semana
+        </div>
+
+        <p class="muted">
+          Registra tu primer entrenamiento
+          para desbloquear tu primer reto.
+        </p>
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  const challenge =
+    getCurrentChallenge(exercise);
+
+
+  if(!challenge) return;
+
+
+  const pr =
+    getExercisePR(exercise);
+
+
+  const trend =
+    challenge.trend;
+
+
+  let trendText =
+    "📊 Rendimiento estable";
+
+
+  if(trend === "subiendo"){
+
+    trendText =
+      "📈 Vas en progreso";
+
+  }
+
+  if(trend === "bajando"){
+
+    trendText =
+      "🔄 Reto de recuperación";
+
+  }
+
+
+  const progress =
+    Math.min(
+      100,
+      Math.round(
+        (pr / challenge.target) * 100
+      )
+    );
+
+
+  container.innerHTML = `
+
+    <div class="card challenge-card">
+
+      <div class="card-title">
+        🎯 RETO DE LA SEMANA
+      </div>
+
+      <h2 style="margin:10px 0;">
+        ${escapeHtml(exercise)}
+      </h2>
+
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        gap:15px;
+        margin:15px 0;
+      ">
+
+        <div>
+          <small>PR actual</small>
+          <strong style="
+            display:block;
+            font-size:28px;
+          ">
+            ${pr}
+          </strong>
+        </div>
+
+        <div>
+          <small>Próximo objetivo</small>
+          <strong style="
+            display:block;
+            font-size:28px;
+          ">
+            ${challenge.target}
+          </strong>
+        </div>
+
+      </div>
+
+
+      <div style="
+        height:10px;
+        background:rgba(255,255,255,.08);
+        border-radius:20px;
+        overflow:hidden;
+      ">
+
+        <div style="
+          width:${progress}%;
+          height:100%;
+          background:linear-gradient(
+            90deg,
+            #7c3aed,
+            #a855f7
+          );
+        "></div>
+
+      </div>
+
+
+      <p style="margin-top:12px;">
+        ${pr}/${challenge.target} reps
+      </p>
+
+      <p class="muted">
+        ${trendText}
+      </p>
+
+    </div>
+
+  `;
+
+}
 const progressionData = [
 
   {
@@ -3002,76 +4001,261 @@ function exportData(){
    FORMULARIO ENTRENAMIENTO
 ========================================================= */
 
+/* =========================================================
+   FORMULARIO ENTRENAMIENTO — MULTI EJERCICIO
+========================================================= */
+
 document
   .getElementById("workoutForm")
-  .addEventListener("submit",function(e){
+  .addEventListener("submit", async function(e){
 
     e.preventDefault();
 
+    const date =
+      document.getElementById("date").value;
 
-    const workout = {
+    const type =
+      document.getElementById("type").value;
 
-      id:Date.now(),
+    const duration =
+      Number(
+        document.getElementById("duration").value || 0
+      );
 
-      date:
-        document.getElementById("date").value,
+    const bodyweight =
+      Number(
+        document.getElementById("bodyweight").value || 0
+      );
 
-      type:
-        document.getElementById("type").value,
-
-      exercise:
-        document.getElementById("exercise").value.trim(),
-
-      sets:
-        Number(document.getElementById("sets").value),
-
-      reps:
-        Number(document.getElementById("reps").value),
-
-      weight:
-        Number(document.getElementById("weight").value || 0),
-
-      rir:
-        Number(document.getElementById("rir").value),
-
-      duration:
-        Number(document.getElementById("duration").value || 0),
-
-      bodyweight:
-        Number(document.getElementById("bodyweight").value || 0),
-
-      notes:
-        document.getElementById("notes").value.trim()
-
-    };
+    const notes =
+      document.getElementById("notes").value.trim();
 
 
-    workouts.push(workout);
+    // ------------------------------------------
+    // EJERCICIOS A GUARDAR
+    // ------------------------------------------
 
-    saveWorkouts();
+    let exerciseCards = [];
 
+
+    if(type === "Rutina Cindy"){
+
+      exerciseCards =
+        Array.from(
+          document.querySelectorAll(
+            "#routineExercises [data-exercise]"
+          )
+        );
+
+    }else{
+
+      exerciseCards =
+        Array.from(
+          document.querySelectorAll(
+            "#selectedExercises [data-exercise]"
+          )
+        );
+
+    }
+
+
+    // ------------------------------------------
+    // VALIDAR
+    // ------------------------------------------
+
+    if(!exerciseCards.length){
+
+      showToast(
+        "⚠️ Agrega al menos un ejercicio."
+      );
+
+      return;
+
+    }
+
+
+    // ------------------------------------------
+    // CREAR REGISTROS
+    // ------------------------------------------
+
+    const sessionId = Date.now();
+
+    const newWorkouts = exerciseCards.map(
+      (card,index)=>{
+
+        const exercise =
+          card.dataset.exercise;
+
+
+        const sets =
+          Number(
+            card.querySelector(".exercise-sets").value || 0
+          );
+
+
+        const reps =
+          Number(
+            card.querySelector(".exercise-reps").value || 0
+          );
+
+
+        const weight =
+          Number(
+            card.querySelector(".exercise-weight").value || 0
+          );
+
+
+        const rir =
+          Number(
+            card.querySelector(".exercise-rir").value
+          );
+
+
+        return {
+
+          id:sessionId + index,
+
+          sessionId,
+
+          date,
+
+          type,
+
+          exercise,
+
+          sets,
+
+          reps,
+
+          weight,
+
+          rir,
+
+          duration,
+
+          bodyweight,
+
+          notes
+
+        };
+
+      }
+    );
+
+
+    // ------------------------------------------
+    // GUARDAR LOCALMENTE
+    // ------------------------------------------
+
+    workouts.push(...newWorkouts);
+    /* =========================================================
+   COMPROBAR RETOS
+========================================================= */
+
+newWorkouts.forEach(workout => {
+
+  checkChallenge(
+    workout.exercise,
+    workout.reps
+  );
+
+});
+
+    localStorage.setItem(
+      WORKOUT_KEY,
+      JSON.stringify(workouts)
+    );
+
+
+    // ------------------------------------------
+    // GUARDAR EN SUPABASE
+    // ------------------------------------------
+
+    const cloudRows =
+      newWorkouts.map(w=>({
+
+        workout_date:w.date,
+
+        workout_type:w.type,
+
+        main_exercise:w.exercise,
+
+        sets:w.sets,
+
+        reps:w.reps,
+
+        added_weight:w.weight,
+
+        rir:w.rir,
+
+        duration:w.duration,
+
+        bodyweight:w.bodyweight,
+
+        notes:w.notes
+
+      }));
+
+
+    const {
+      data,
+      error
+    } =
+      await supabaseClient
+        .from("workouts")
+        .insert(cloudRows)
+        .select();
+
+
+    if(error){
+
+      console.error(
+        "❌ Error guardando en Supabase:",
+        error
+      );
+
+      showToast(
+        "⚠️ Guardado en dispositivo, pero no en la nube."
+      );
+
+    }else{
+
+      console.log(
+        "☁️ Entrenamientos guardados:",
+        data
+      );
+
+    }
+
+
+    // ------------------------------------------
+    // LIMPIAR FORMULARIO
+    // ------------------------------------------
 
     this.reset();
 
+    selectedExercises = [];
+
 
     document.getElementById("date").value =
-      new Date().toISOString().split("T")[0];
+      new Date()
+        .toISOString()
+        .split("T")[0];
 
+
+    renderRoutineExercises();
 
     renderAll();
 
-    showToast("Entrenamiento registrado. +XP");
+
+    showToast(
+      `${newWorkouts.length} ejercicio${newWorkouts.length === 1 ? "" : "s"} registrado${newWorkouts.length === 1 ? "" : "s"}. +XP`
+    );
 
 
     showView("dashboard");
 
   });
-
-
-/* =========================================================
-   FORMULARIO METAS
-========================================================= */
-
 document
   .getElementById("goalForm")
   .addEventListener("submit",function(e){
@@ -3144,6 +4328,8 @@ function renderAll(){
 
   renderDashboard();
 
+  renderWeeklyChallenge();
+
   renderHistory();
 
   renderManualGoals();
@@ -3155,6 +4341,7 @@ function renderAll(){
 }
 
 
+
 /* =========================================================
    ARRANQUE
 ========================================================= */
@@ -3162,6 +4349,8 @@ function renderAll(){
 renderAll();
 
 </script>
+
+
 
 </body>
 </html>
